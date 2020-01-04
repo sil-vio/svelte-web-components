@@ -2,12 +2,14 @@
 
 <script>
   import { onMount } from "svelte";
+	import { createEventDispatcher } from 'svelte';
 
   export let clocktitle = "Svelte Clock";
   export let enablems = true;
 
   let time = new Date();
-
+	const dispatch = createEventDispatcher();
+  
   // these automatically update when `time`
   // changes, because of the `$:` prefix
   $: hours = time.getHours();
@@ -25,6 +27,11 @@
 
   function updateDate() {
     time = new Date();
+    if (time.getSeconds() % 10 == 0) {
+        dispatch('second', {
+        text: '10 seconds elapsed!'
+      });
+    }
   }
 
   function dispatchSavedDateEvent(e) {

@@ -12,9 +12,10 @@
   <script>
     const clock = document.querySelector('svelte-clock');
     console.log("[index.html] element ", clock);
+    document.querySelector('svelte-clock').$on('second', (e) => { console.log("[index.html][second]", e)})
 
     clock.addEventListener("savedData", (e) => {
-      console.log("[index.html] ", e);
+      console.log("[index.html][savedData] ", e);
     })
   </script>
 </html>
