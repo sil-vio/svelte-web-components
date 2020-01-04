@@ -1,106 +1,141 @@
-<svelte:options tag="x-app"/>
+<svelte:options tag="svelte-clock" />
 
 <script>
-	import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 
-	let time = new Date();
+  export let clocktitle = "Svelte Clock";
+  export let enablems = true;
 
-	// these automatically update when `time`
-	// changes, because of the `$:` prefix
-	$: hours = time.getHours();
-	$: minutes = time.getMinutes();
-	$: seconds = time.getSeconds();
+  let time = new Date();
 
-	onMount(() => {
-		const interval = setInterval(() => {
-			time = new Date();
-		}, 1000);
+  // these automatically update when `time`
+  // changes, because of the `$:` prefix
+  $: hours = time.getHours();
+  $: minutes = time.getMinutes();
+  $: seconds = time.getSeconds();
+  $: mseconds = time.getMilliseconds();
 
-		return () => {
-			clearInterval(interval);
-		};
-	});
+  onMount(() => {
+    const interval = setInterval(updateDate, 10);
+
+    return () => {
+      clearInterval(interval);
+    };
+  });
+
+  function updateDate() {
+    time = new Date();
+  }
+
+  function dispatchSavedDateEvent(e) {
+    console.log("[dispatchSecondIsElapsedEvent] time: ", time);
+    // 1. Create the custom event.
+    const event = new CustomEvent("savedData", {
+      detail: time,
+      bubbles: true,
+      cancelable: true,
+      composed: true // makes the event jump shadow DOM boundary
+    });
+
+    // 2. Dispatch the custom event.
+    this.dispatchEvent(event);
+  }
 </script>
 
-<style>
-	svg {
-		width: 100%;
-		height: 100%;
-	}
 
-	.clock-face {
-		stroke: #333;
-		fill: white;
-	}
+<h1>{clocktitle}</h1>
+<button on:click="{dispatchSavedDateEvent}">Save Date</button>
+<svg viewBox="-50 -50 100 100">
+  <circle class="clock-face" r="48" />
 
-	.minor {
-		stroke: #999;
-		stroke-width: 0.5;
-	}
+  <!-- markers -->
+  {#each [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] as minute}
+    <line class="major" y1="35" y2="45" transform="rotate({30 * minute})" />
 
-	.major {
-		stroke: #333;
-		stroke-width: 1;
-	}
+    {#each [1, 2, 3, 4] as offset}
+      <line
+        class="minor"
+        y1="42"
+        y2="45"
+        transform="rotate({6 * (minute + offset)})" />
+    {/each}
+  {/each}
 
-	.hour {
-		stroke: #333;
-	}
+  {#if enablems}
+    <!-- ms hand -->
+    <g transform="rotate({0.36 * mseconds})">
+      <line class="msecond" y1="10" y2="-38" />
+      <line class="msecond-counterweight" y1="10" y2="2" />
+    </g>
+  {/if}
 
-	.minute {
-		stroke: #666;
-	}
+  <!-- second hand -->
+  <g transform="rotate({6 * seconds})">
+    <line class="second" y1="10" y2="-38" />
+    <line class="second-counterweight" y1="10" y2="2" />
+  </g>
 
-	.second, .second-counterweight {
-		stroke: rgb(180,0,0);
-	}
+  <!-- minute hand -->
+  <line
+    class="minute"
+    y1="4"
+    y2="-30"
+    transform="rotate({6 * minutes + seconds / 10})" />
 
-	.second-counterweight {
-		stroke-width: 3;
-	}
-</style>
+  <!-- hour hand -->
+  <line
+    class="hour"
+    y1="2"
+    y2="-20"
+    transform="rotate({30 * hours + minutes / 2})" />
 
-<svg viewBox='-50 -50 100 100'>
-	<circle class='clock-face' r='48'/>
-
-	<!-- markers -->
-	{#each [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] as minute}
-		<line
-			class='major'
-			y1='35'
-			y2='45'
-			transform='rotate({30 * minute})'
-		/>
-
-		{#each [1, 2, 3, 4] as offset}
-			<line
-				class='minor'
-				y1='42'
-				y2='45'
-				transform='rotate({6 * (minute + offset)})'
-			/>
-		{/each}
-	{/each}
-
-	<!-- hour hand -->
-	<line
-		class='hour'
-		y1='2'
-		y2='-20'
-		transform='rotate({30 * hours + minutes / 2})'
-	/>
-
-	<!-- minute hand -->
-	<line
-		class='minute'
-		y1='4'
-		y2='-30'
-		transform='rotate({6 * minutes + seconds / 10})'
-	/>
-
-	<!-- second hand -->
-	<g transform='rotate({6 * seconds})'>
-		<line class='second' y1='10' y2='-38'/>
-		<line class='second-counterweight' y1='10' y2='2'/>
-	</g>
 </svg>
+
+
+<style>
+  svg {
+    width: 50%;
+    height: 50%;
+  }
+
+  .clock-face {
+    stroke: #333;
+    fill: white;
+  }
+
+  .minor {
+    stroke: #999;
+    stroke-width: 0.5;
+  }
+
+  .major {
+    stroke: #333;
+    stroke-width: 1;
+  }
+
+  .hour {
+    stroke: #333;
+  }
+
+  .minute {
+    stroke: #666;
+  }
+
+  .second,
+  .second-counterweight {
+    stroke: rgb(180, 0, 0);
+  }
+
+  .second-counterweight {
+    stroke-width: 3;
+  }
+
+  .msecond,
+  .msecond-counterweight {
+    stroke: rgb(83, 3, 3);
+  }
+
+  .msecond-counterweight {
+    stroke-width: 1;
+  }
+</style>
